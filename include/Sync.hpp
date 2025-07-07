@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <stdexcept>
+
+class SyncError: public std::runtime_error { public: using std::runtime_error::runtime_error; };
 
 class Sync {
 public:

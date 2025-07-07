@@ -1,6 +1,12 @@
 #include "SyncGoogleDrive.hpp"
-#include <curl/curl.h>
+#include "Logger.hpp"
 
 SyncGoogleDrive::SyncGoogleDrive(const std::string& credentials): credentials_(credentials) {}
-void SyncGoogleDrive::upload(const std::string& localPath) {}
-void SyncGoogleDrive::download(const std::string& localPath) {} 
+
+void SyncGoogleDrive::upload(const std::string&) {
+    throw SyncError("Google Drive upload not implemented");
+}
+
+void SyncGoogleDrive::download(const std::string&) {
+    throw SyncError("Google Drive download not implemented");
+} 

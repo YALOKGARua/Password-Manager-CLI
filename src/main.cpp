@@ -1,37 +1,34 @@
 #include "PasswordManager.hpp"
+#include "UI.hpp"
 #include <iostream>
-#include <string>
+#include <unordered_map>
 
 int main(int argc, char* argv[]) {
-    if(argc<3) {
-        std::cout<<"Usage: pwdmgr <command> --db <dbpath> [options]\n";
+    if(argc < 3) { std::cerr<<"Usage: pwdmgr <command> --db <dbpath> [options]\n"; return 1; }
+    std::string command = argv[1], dbPath;
+    for(int i=2; i<argc; ++i) if(std::string(argv[i])=="--db" && i+1<argc) dbPath = argv[++i];
+    if(dbPath.empty()) { std::cerr<<"--db is required\n"; return 1; }
+    std::cout<<"Master Password: "; std::string master; std::getline(std::cin, master);
+    PasswordManager::Config cfg{dbPath};
+    PasswordManager pm(cfg, master);
+    std::unordered_map<std::string, std::function<void()>> cmds{
+        {"init", [&](){ pm.initDb(); }},
+        {"add",  [&](){ pm.add("", "", ""); }},
+        {"list", [&](){ pm.list(); }},
+        {"get",  [&](){ pm.get(""); }},
+        {"remove",[&](){ pm.remove(""); }},
+        {"update",[&](){ pm.update("", std::nullopt, std::nullopt); }}
+    };
+    try {
+        if(cmds.count(command)) cmds[command]();
+        else {
+            UI ui; ui.addMenuItem("Init DB", [&](){ pm.initDb(); });
+            ui.addMenuItem("List entries", [&](){ pm.list(); });
+            ui.run();
+        }
+    } catch(const std::exception& e) {
+        std::cerr<<"Error: "<<e.what()<<"\n";
         return 1;
-    }
-    std::string command = argv[1];
-    std::string dbPath;
-    std::string name;
-    std::string username;
-    std::string password;
-    for(int i=2;i<argc;i++) {
-        std::string arg = argv[i];
-        if(arg=="--db" && i+1<argc) dbPath=argv[++i];
-        else if(arg=="--name" && i+1<argc) name=argv[++i];
-        else if(arg=="--username" && i+1<argc) username=argv[++i];
-        else if(arg=="--password" && i+1<argc) password=argv[++i];
-    }
-    std::cout<<"Master Password: ";
-    std::string master;
-    std::getline(std::cin, master);
-    PasswordManager pm(dbPath, master);
-    if(command=="init") pm.initDb();
-    else if(command=="add") pm.add(name, username, password);
-    else if(command=="list") pm.list();
-    else if(command=="get") pm.get(name);
-    else if(command=="remove") pm.remove(name);
-    else if(command=="update") {
-        const std::string* userPtr = username.empty()? nullptr:&username;
-        const std::string* passPtr = password.empty()? nullptr:&password;
-        pm.update(name, userPtr, passPtr);
     }
     return 0;
 } 

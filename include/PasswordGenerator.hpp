@@ -1,12 +1,17 @@
 #pragma once
 #include <string>
 #include <random>
+#include <vector>
+#include <stdexcept>
 
 class PasswordGenerator {
 public:
-    PasswordGenerator();
-    std::string generate(size_t length, bool upper, bool lower, bool digits, bool symbols);
+    struct Options { size_t length = 16; bool upper = true; bool lower = true; bool digits = true; bool symbols = true; };
+    explicit PasswordGenerator(const Options& opts = {});
+    std::string generate() const;
 private:
-    std::random_device rd;
-    std::mt19937 gen;
+    void buildCharset();
+    Options opts_;
+    std::mt19937_64 gen_;
+    std::string charset_;
 }; 
