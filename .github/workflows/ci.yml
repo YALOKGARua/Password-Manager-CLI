@@ -21,4 +21,4 @@ jobs:
       run: |
         cd build
         cppcheck ../src ../include
-        clang-tidy ../src/*.cpp -- -Iinclude 
+        clang-tidy ../src/*.cpp -- -I../include 
