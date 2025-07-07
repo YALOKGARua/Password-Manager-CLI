@@ -22,12 +22,18 @@ jobs:
       run: |
         if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
           sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libspdlog-dev nlohmann-json3-dev libcurl4-openssl-dev libncurses5-dev libncursesw5-dev cppcheck clang-tidy
-        else
-          choco install cmake --installarguments 'ADD_CMAKE_TO_PATH=System' --yes
-          choco install openssl.light --yes
-          choco install nlohmann-json --yes
-          choco install spdlog --yes
         fi
+    - uses: microsoft/vcpkg-action@v1
+      if: matrix.os == 'windows-latest'
+      id: vcpkg
+      with:
+        vcpkgGitCommitId: latest
+    - name: vcpkg install (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: powershell
+      run: |
+        $vcpkgRoot = '${{ steps.vcpkg.outputs.vcpkgRoot }}'
+        & "$vcpkgRoot\vcpkg" install openssl:x64-windows spdlog:x64-windows nlohmann-json:x64-windows curl:x64-windows
     - name: Build
       shell: bash
       run: |
@@ -37,7 +43,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --config Release
         else
-          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="${{ steps.vcpkg.outputs.vcpkgRoot }}/scripts/buildsystems/vcpkg.cmake" -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --config Release
         fi
     - name: Static analysis
