@@ -1,5 +1,6 @@
 enable_testing()
 find_package(GTest REQUIRED)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(test_logger test_logger.cpp)
 target_link_libraries(test_logger PRIVATE logger GTest::gtest_main)
 add_test(NAME logger_tests COMMAND test_logger) 
