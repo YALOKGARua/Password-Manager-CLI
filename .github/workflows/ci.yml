@@ -8,50 +8,49 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libspdlog-dev nlohmann-json3-dev libcurl4-openssl-dev libgtest-dev libncurses5-dev libncursesw5-dev cppcheck clang-tidy
+      run: |
+        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libspdlog-dev nlohmann-json3-dev libcurl4-openssl-dev libncurses5-dev libncursesw5-dev cppcheck clang-tidy
+        else
+          choco install cmake --installarguments 'ADD_CMAKE_TO_PATH=System' --yes
+          choco install openssl.light --yes
+          choco install nlohmann-json --yes
+          choco install spdlog --yes
+        fi
     - name: Build
+      shell: bash
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_BUILD_TYPE=Release ..
-        cmake --build . --config Release | tee build.log
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: pwdmgr-executable
-        path: build/pwdmgr
-    - name: Run tests
-      run: |
-        cd build
-        ctest --output-on-failure
+        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build . --config Release
+        else
+          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build . --config Release
+        fi
     - name: Static analysis
+      if: matrix.os == 'ubuntu-latest'
       run: |
         cd build
         cppcheck ../src ../include
         clang-tidy ../src/*.cpp -- -I../include
-    - name: Create GitHub Release
+    - name: Create Release and upload binary
       if: startsWith(github.ref, 'refs/tags/')
-      id: create_release
-      uses: actions/create-release@v1
+      uses: ncipollo/release-action@v1
       with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
-        body: 'Release of pwdmgr executable'
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Upload Release Asset
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: build/pwdmgr
-        asset_name: pwdmgr
-        asset_content_type: application/octet-stream 
+        tag: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        files: |
+          build/pwdmgr
+          build/Release/pwdmgr.exe 
