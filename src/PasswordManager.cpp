@@ -12,7 +12,7 @@ void PasswordManager::add(const std::string& name, const std::string& username, 
     storage_.add(name, username, password);
 }
 
-void PasswordManager::list() const {
+void PasswordManager::list() {
     storage_.load();
     auto items = storage_.list();
     for(auto& el: items.items()) {
@@ -20,7 +20,7 @@ void PasswordManager::list() const {
     }
 }
 
-void PasswordManager::get(const std::string& name) const {
+void PasswordManager::get(const std::string& name) {
     storage_.load();
     auto entry = storage_.get(name);
     if(!entry.is_null()) {
