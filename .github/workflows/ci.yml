@@ -1,5 +1,13 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,6 +21,11 @@ jobs:
         cd build
         cmake -DCMAKE_BUILD_TYPE=Release ..
         cmake --build . --config Release | tee build.log
+    - name: Upload executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: pwdmgr-executable
+        path: build/pwdmgr
     - name: Run tests
       run: |
         cd build
@@ -21,4 +34,24 @@ jobs:
       run: |
         cd build
         cppcheck ../src ../include
-        clang-tidy ../src/*.cpp -- -I../include 
+        clang-tidy ../src/*.cpp -- -I../include
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        body: 'Release of pwdmgr executable'
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: build/pwdmgr
+        asset_name: pwdmgr
+        asset_content_type: application/octet-stream 
