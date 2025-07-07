@@ -24,8 +24,9 @@ jobs:
           sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libspdlog-dev nlohmann-json3-dev libcurl4-openssl-dev libncurses5-dev libncursesw5-dev cppcheck clang-tidy
         fi
     - name: Setup vcpkg (Windows)
+      id: vcpkg
       if: matrix.os == 'windows-latest'
-      uses: lukka/run-vcpkg@v0.1.2
+      uses: lukka/run-vcpkg@v10.2
       with:
         vcpkgGitCommitId: latest
 
@@ -43,7 +44,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --config Release
         else
-          cmake -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}\scripts\buildsystems\vcpkg.cmake" -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="${{ steps.vcpkg.outputs.vcpkgRoot }}\scripts\buildsystems\vcpkg.cmake" -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --config Release
         fi
     - name: Static analysis
