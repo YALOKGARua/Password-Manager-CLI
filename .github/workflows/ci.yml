@@ -1,0 +1,29 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup C++
+      uses: actions/setup-cpp@v1
+      with:
+        compiler: gcc
+        cmake-version: '3.14'
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y libssl-dev libspdlog-dev nlohmann-json3-dev libcurl4-openssl-dev libgtest-dev
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build . | tee build.log
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure
+    - name: Static analysis
+      run: |
+        cd build
+        cppcheck ../src ../include
+        clang-tidy ../src/*.cpp -- -Iinclude 
