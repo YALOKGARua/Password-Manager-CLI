@@ -15,6 +15,5 @@ void UI::draw() {
 }
 
 void UI::handleInput() {
-    int ch;
-    while((ch = getch()) != 'q') {}
+    while(getch() != 'q') {}
 } 

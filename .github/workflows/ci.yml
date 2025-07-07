@@ -11,8 +11,8 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ..
-        cmake --build . | tee build.log
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        cmake --build . --config Release | tee build.log
     - name: Run tests
       run: |
         cd build
