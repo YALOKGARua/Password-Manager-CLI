@@ -40,18 +40,23 @@ jobs:
       shell: powershell
       run: |
         vcpkg install openssl:x64-windows spdlog:x64-windows nlohmann-json:x64-windows curl:x64-windows
-    - name: Build
+    - name: Build (Linux)
+      if: matrix.os == 'ubuntu-latest'
       shell: bash
       run: |
         mkdir build
         cd build
-        if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build . --config Release
-        else
-          cmake -DCMAKE_TOOLCHAIN_FILE="${{ steps.vcpkg.outputs.vcpkgRoot }}\scripts\buildsystems\vcpkg.cmake" -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
-          cmake --build . --config Release
-        fi
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        cmake --build . --config Release
+
+    - name: Build (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: powershell
+      run: |
+        New-Item -ItemType Directory -Path build
+        Set-Location build
+        cmake -DCMAKE_TOOLCHAIN_FILE="${{ steps.vcpkg.outputs.vcpkgRoot }}\scripts\buildsystems\vcpkg.cmake" -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release ..
+        cmake --build . --config Release
     - name: Static analysis
       if: matrix.os == 'ubuntu-latest'
       run: |
