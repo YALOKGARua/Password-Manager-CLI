@@ -29,9 +29,11 @@ jobs:
     - name: Setup vcpkg (Windows)
       id: vcpkg
       if: matrix.os == 'windows-latest'
-      uses: lukka/run-vcpkg@v10.2
-      with:
-        vcpkgGitCommitId: latest
+      shell: powershell
+      run: |
+        git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+        .\vcpkg\bootstrap-vcpkg.bat
+        Add-Content -Path $Env:GITHUB_OUTPUT -Value "vcpkgRoot=$PWD\\vcpkg"
 
     - name: Install vcpkg libs (Windows)
       if: matrix.os == 'windows-latest'
