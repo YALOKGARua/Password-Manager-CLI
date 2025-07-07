@@ -39,7 +39,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
-        vcpkg install openssl:x64-windows spdlog:x64-windows nlohmann-json:x64-windows curl:x64-windows
+        .\vcpkg\vcpkg.exe install openssl:x64-windows spdlog:x64-windows nlohmann-json:x64-windows curl:x64-windows
     - name: Build (Linux)
       if: matrix.os == 'ubuntu-latest'
       shell: bash
